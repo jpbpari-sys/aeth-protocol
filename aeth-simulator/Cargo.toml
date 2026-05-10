@@ -1,0 +1,16 @@
+[package]
+name    = "aeth-simulator"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "aeth-simulator"
+path = "src/main.rs"
+
+[dependencies]
+tokio.workspace              = true
+rand.workspace               = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true
+clap.workspace               = true
+anyhow.workspace             = true

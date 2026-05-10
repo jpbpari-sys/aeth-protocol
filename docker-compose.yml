@@ -1,0 +1,129 @@
+version: '3.9'
+
+services:
+  bootnode:
+    build:
+      context: .
+      dockerfile: Dockerfile.network
+    command: --role full --port 4001 --metrics-port 8080
+    ports:
+      - "4001:4001"
+      - "4001:4001/udp"
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info,aeth_network=debug
+    networks:
+      - aeth-net
+
+  validator-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.network
+    command: >
+      --role validator
+      --stake 100000
+      --port 4002
+      --metrics-port 8081
+      --bootnodes /ip4/bootnode/tcp/4001
+    depends_on:
+      - bootnode
+    ports:
+      - "8081:8081"
+    environment:
+      - RUST_LOG=info
+    networks:
+      - aeth-net
+
+  validator-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.network
+    command: >
+      --role validator
+      --stake 75000
+      --port 4003
+      --metrics-port 8082
+      --bootnodes /ip4/bootnode/tcp/4001
+    depends_on:
+      - bootnode
+    ports:
+      - "8082:8082"
+    environment:
+      - RUST_LOG=info
+    networks:
+      - aeth-net
+
+  sequencer:
+    build:
+      context: .
+      dockerfile: Dockerfile.network
+    command: >
+      --role sequencer
+      --stake 500000
+      --port 4004
+      --metrics-port 8083
+      --bootnodes /ip4/bootnode/tcp/4001
+    depends_on:
+      - bootnode
+    ports:
+      - "8083:8083"
+    environment:
+      - RUST_LOG=info
+    networks:
+      - aeth-net
+
+  prover:
+    build:
+      context: .
+      dockerfile: Dockerfile.prover
+    command: --workers 4 --metrics-port 8090
+    ports:
+      - "8090:8090"
+    environment:
+      - RUST_LOG=info,aeth_prover=debug
+    networks:
+      - aeth-net
+
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    command: --nodes 30 --byzantine 0.25 --rounds 200 --attacks
+    environment:
+      - RUST_LOG=info,aeth_simulator=debug
+    networks:
+      - aeth-net
+    profiles:
+      - sim   # run with: docker compose --profile sim up simulator
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - aeth-net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/aeth-dashboard.json:/etc/grafana/provisioning/dashboards/aeth.json
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=aeth123
+    networks:
+      - aeth-net
+
+networks:
+  aeth-net:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,35 @@
+# ── Build stage ──────────────────────────────────────────────────────────────
+FROM rust:1.85-slim AS builder
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    pkg-config libssl-dev build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY Cargo.toml Cargo.lock ./
+COPY aeth-network   ./aeth-network
+COPY aeth-prover    ./aeth-prover
+COPY aeth-simulator ./aeth-simulator
+
+RUN cargo build --release -p aeth-prover
+
+# ── Runtime stage (CUDA-ready; falls back to CPU-only)  ──────────────────────
+# Swap base image to nvidia/cuda:12.8.0-runtime-ubuntu22.04 for GPU support
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y ca-certificates libssl3 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/release/aeth-prover /usr/local/bin/aeth-prover
+
+EXPOSE 8083/tcp
+
+HEALTHCHECK --interval=30s --timeout=15s --start-period=10s \
+    CMD curl -sf http://localhost:8083/health || exit 1
+
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+ENTRYPOINT ["/usr/local/bin/aeth-prover"]
+CMD ["--workers", "4", "--metrics-port", "8083"]

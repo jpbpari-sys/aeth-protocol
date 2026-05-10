@@ -1,0 +1,28 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'aeth-bootnode'
+    static_configs:
+      - targets: ['bootnode:8080']
+        labels:
+          role: bootnode
+
+  - job_name: 'aeth-validators'
+    static_configs:
+      - targets: ['validator-1:8081', 'validator-2:8082']
+        labels:
+          role: validator
+
+  - job_name: 'aeth-sequencer'
+    static_configs:
+      - targets: ['sequencer:8083']
+        labels:
+          role: sequencer
+
+  - job_name: 'aeth-prover'
+    static_configs:
+      - targets: ['prover:8090']
+        labels:
+          role: prover
