@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile.network
     container_name: aeth-bootnode
-    command: ["--role", "full", "--listen", "/ip4/0.0.0.0/tcp/4001"]
+    command: ["--role", "full", "--port", "4001", "--stake", "1000000", "--metrics-port", "8080"]
     ports:
       - "4001:4001"
-      - "9090:9090"
+      - "8080:8080"
     networks:
       - aeth-mesh
 
@@ -20,7 +20,7 @@ services:
     container_name: aeth-sequencer-primary
     depends_on:
       - bootnode
-    command: ["--role", "sequencer", "--bootnodes", "/dns4/bootnode/tcp/4001/p2p/BOOTNODE_ID"]
+    command: ["--role", "sequencer", "--bootnodes", "/ip4/172.18.0.5/tcp/4001/p2p/12D3KooWJUg5Sq3d1CqY6ofkhav3mLvq79R1jqcoDW5ALyn3U2qb", "--stake", "5000000", "--metrics-port", "8080"]
     networks:
       - aeth-mesh
 
@@ -31,6 +31,7 @@ services:
     container_name: aeth-prover-01
     depends_on:
       - sequencer-primary
+    command: ["--metrics-port", "8083"]
     networks:
       - aeth-mesh
 
@@ -39,14 +40,19 @@ services:
     container_name: aeth-prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     ports:
       - "9091:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - aeth-mesh
 
   grafana:
     image: grafana/grafana:latest
     container_name: aeth-grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
     ports:
       - "3000:3000"
     environment:
@@ -54,6 +60,21 @@ services:
     networks:
       - aeth-mesh
 
+  trading-defense:
+    build:
+      context: /Users/jpb/Downloads/
+      dockerfile: /Users/jpb/Downloads/aeth-protocol/Dockerfile.tde
+    container_name: aeth-trading-defense
+    ports:
+      - "8999:8999"
+    networks:
+      - aeth-mesh
+    restart: always
+
 networks:
   aeth-mesh:
     driver: bridge
+
+volumes:
+  grafana-data:
+  prometheus-data:

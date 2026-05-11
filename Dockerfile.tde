@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir numpy prometheus_client
+
+# Copy the TDE script from the context (Downloads)
+COPY trading_defense_engine.py .
+
+# Expose the Prometheus metrics port
+EXPOSE 8000
+
+# Run the engine
+ENTRYPOINT ["python", "trading_defense_engine.py"]

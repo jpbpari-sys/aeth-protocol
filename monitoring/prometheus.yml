@@ -1,15 +1,15 @@
 global:
-  scrape_interval: 5s
-  evaluation_interval: 5s
+  scrape_interval: 2s
+  evaluation_interval: 2s
 
 scrape_configs:
   - job_name: 'aeth-protocol'
     static_configs:
       - targets: 
-        - 'bootnode:9090'
-        - 'sequencer-primary:9090'
-        - 'prover-gpu-01:9090'
+        - 'aeth-bootnode:8080'
+        - 'aeth-sequencer-primary:8080'
+        - 'aeth-prover-01:8083'
 
-  - job_name: 'aeth-network'
+  - job_name: 'trading-defense'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['aeth-trading-defense:8999']
