@@ -8,6 +8,7 @@ name = "aeth-network"
 path = "src/main.rs"
 
 [dependencies]
+aeth-cache = { path = "../aeth-cache" }
 tokio.workspace              = true
 libp2p.workspace             = true
 serde.workspace              = true

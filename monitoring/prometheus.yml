@@ -1,28 +1,15 @@
 global:
-  scrape_interval:     15s
-  evaluation_interval: 15s
+  scrape_interval: 5s
+  evaluation_interval: 5s
 
 scrape_configs:
-  - job_name: 'aeth-bootnode'
+  - job_name: 'aeth-protocol'
     static_configs:
-      - targets: ['bootnode:8080']
-        labels:
-          role: bootnode
+      - targets: 
+        - 'bootnode:9090'
+        - 'sequencer-primary:9090'
+        - 'prover-gpu-01:9090'
 
-  - job_name: 'aeth-validators'
+  - job_name: 'aeth-network'
     static_configs:
-      - targets: ['validator-1:8081', 'validator-2:8082']
-        labels:
-          role: validator
-
-  - job_name: 'aeth-sequencer'
-    static_configs:
-      - targets: ['sequencer:8083']
-        labels:
-          role: sequencer
-
-  - job_name: 'aeth-prover'
-    static_configs:
-      - targets: ['prover:8090']
-        labels:
-          role: prover
+      - targets: ['localhost:9090']

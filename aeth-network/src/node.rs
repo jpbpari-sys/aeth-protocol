@@ -1,4 +1,5 @@
 use crate::{metrics::AethMetrics, message::RollupMessage};
+use aeth_cache::DarkEnergyCache;
 use std::collections::VecDeque;
 
 /// The role this node plays in the AETH protocol.
@@ -31,6 +32,7 @@ pub struct Node {
     pub state_root: [u8; 32],
     pub round:      u64,
     pub metrics:    AethMetrics,
+    pub cache:      DarkEnergyCache<u64, bool>,
 }
 
 impl Node {
@@ -43,6 +45,7 @@ impl Node {
             state_root: [0u8; 32],
             round:      0,
             metrics:    AethMetrics::new(),
+            cache:      DarkEnergyCache::new(10000),
         }
     }
 
@@ -53,8 +56,12 @@ impl Node {
                 self.mempool.push_back(msg);
                 self.metrics.votes_received.inc();
             }
-            RollupMessage::BatchProposal { .. } => {
-                tracing::debug!("Received batch proposal");
+            RollupMessage::BatchProposal { round, .. } => {
+                if self.cache.get(round).is_some() {
+                    return; // Deduplicated by Dark Energy Cache
+                }
+                self.cache.put(*round, true);
+                tracing::debug!(round, "Received batch proposal (Cache Miss)");
             }
             RollupMessage::Proof { state_root, .. } => {
                 // TODO: plug in real verifier

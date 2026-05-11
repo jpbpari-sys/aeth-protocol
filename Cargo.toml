@@ -3,6 +3,7 @@ members = [
     "aeth-network",
     "aeth-simulator",
     "aeth-prover",
+    "aeth-cache",
 ]
 resolver = "2"
 

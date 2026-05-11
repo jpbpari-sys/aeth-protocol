@@ -1,5 +1,5 @@
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM rust:1.85-slim AS builder
+FROM rust:1.86-slim AS builder
 
 WORKDIR /app
 
@@ -8,8 +8,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
+COPY aeth-cache ./aeth-cache
 COPY aeth-network  ./aeth-network
 COPY aeth-prover   ./aeth-prover
+COPY aeth-sdk ./aeth-sdk
 COPY aeth-simulator ./aeth-simulator
 
 RUN cargo build --release -p aeth-network
